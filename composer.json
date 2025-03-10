@@ -6,7 +6,7 @@
         "module",
         "jelix",
         "lizmap",
-        "cart@ds"
+        "cartads"
     ],
     "homepage": "https://www.3liz.com/",
     "license": "MPL-2.0",
