@@ -4,13 +4,18 @@ namespace cartADS;
 class dbClient {
 
     public static function charge(string $repo, string $projectName, array $parcelles) {
+        // Get connection from project
         $cnx = Util::getConnection($repo, $projectName);
         if (!$cnx) {
             return null;
         }
+
+        // Defined a quote function for array_map
         $quote = function($value) use ($cnx) {
             return $cnx->quote($value);
         };
+
+        // Build SQL query to get parcelles information for charge
         $sql = 'SELECT cartads_parcelle_id AS id,
             p.cartads_parcelle AS nom,
             round(ST_Area(p.geom)::numeric) AS surface,
@@ -22,9 +27,11 @@ class dbClient {
             WHERE cartads_parcelle IN (' . implode(', ', array_map($quote, $parcelles)) . ')
             GROUP BY cartads_parcelle_id, p.cartads_parcelle, p.geom
         ';
+        // Execute query and get parcelles data
         $result = $cnx->query($sql);
         $parcellesData = $result->fetchAll();
 
+        // Build SQL query to get zones information for parcelles
         $sql = 'SELECT cartads_parcelle_id AS parcelle_id,
             z.zones_nom AS nom,
             round(ST_Area(ST_Intersection(p.geom, gz.geom))::numeric) AS surface,
@@ -39,9 +46,11 @@ class dbClient {
             WHERE p.cartads_parcelle IN (' . implode(', ', array_map($quote, $parcelles)) . ')
             ORDER BY pourcentage DESC
         ';
+        // Execute query and get zones data
         $result = $cnx->query($sql);
         $zonesData = $result->fetchAll();
 
+        // Merge zones data with parcelles data
         foreach ($parcellesData as &$parcelle) {
             $parcelle->zones = array();
             foreach ($zonesData as $zone) {
@@ -51,6 +60,7 @@ class dbClient {
             }
         }
 
+        // Return parcelles data with zones data
         return $parcellesData;
     }
 }
