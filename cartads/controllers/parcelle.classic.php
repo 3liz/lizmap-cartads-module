@@ -14,7 +14,7 @@ class parcelleCtrl extends jController {
         $parcelleId = $this->param('parcelle_id');
         if (is_null($repo) || is_null($projectName) || is_null($parcelleId)) {
             $resp->setHttpStatus('404');
-            $resp->content = array(
+            $resp->data = array(
                 'code' => '404',
                 'message' => 'Missing parameters',
                 'details' => 'repository, project, parcelle_id are mandatory',
@@ -29,7 +29,7 @@ class parcelleCtrl extends jController {
                 $message = 'Project is not a cartADS project';
             }
             $resp->setHttpStatus('500', 'Internal Server Error');
-            $resp->content = array(
+            $resp->data = array(
                 'code' => '500',
                 'message' => 'Internal Server Error',
                 'details' => $message,
@@ -51,7 +51,7 @@ class parcelleCtrl extends jController {
         $resp = $this->getResponse('text');
         if (is_null($repo) || is_null($projectName) || is_null($parcelles)) {
             $resp->setHttpStatus('404', 'Missing parameters');
-            $resp->content = 'repository, project, parcelles[] are mandatory';
+            $resp->data = 'repository, project, parcelles[] are mandatory';
             return $resp;
         }
         $testCartADSProject = cartAdsUtil::projectIsCartADS($repo, $projectName);
@@ -62,15 +62,15 @@ class parcelleCtrl extends jController {
                 $message = 'Project name must be "cartads"';
             }
             $resp->setHttpStatus('500', 'Internal Server Error');
-            $resp->content = $message;
+            $resp->data = $message;
             return $resp;
         }
 
         $parcellesCharge = cartAdsDbClient::charge($repo, $projectName, $parcelles);
 
         $resp = $this->getResponse('xml');
-        $resp->contentTpl = 'cartads~charge';
-        $resp->content->assign('parcelles', $parcellesCharge);
+        $resp->dataTpl = 'cartads~charge';
+        $resp->data->assign('parcelles', $parcellesCharge);
 
         return $resp;
     }
