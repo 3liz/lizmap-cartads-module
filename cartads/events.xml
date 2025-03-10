@@ -1,0 +1,10 @@
+<events xmlns="http://jelix.org/ns/events/1.0">
+   <listener name="cartads">
+       <event name="getMapAdditions" />
+       <event name="getRedirectKeyParams" />
+   </listener>
+
+  <listener name="admincartads">
+      <event name="masteradminGetMenuContent" />
+  </listener>
+</events>

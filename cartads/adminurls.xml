@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<suburls xmlns="http://jelix.org/ns/suburls/1.0">
+
+    <url pathinfo="/"  action="admin:show"/>
+    <url pathinfo="/prepare"  action="admin:prepare"/>
+    <url pathinfo="/edit"  action="admin:edit"/>
+    <url pathinfo="/save"  action="admin:save"/>
+
+</suburls>

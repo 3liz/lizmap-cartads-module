@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<suburls xmlns="http://jelix.org/ns/suburls/1.0">
+
+    <url pathinfo="/:repository/:project/parcelle/dossiers"  action="parcelle:dossiers"/>
+    <url pathinfo="/:repository/:project/parcelle/charge"  action="parcelle:charge"/>
+
+</suburls>

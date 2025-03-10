@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://jelix.org/ns/forms/1.1">
+  <input ref="auth_url" type="url">
+    <label>URL de connexion de l’API Rest de Stat’ADS</label>
+    <help>Permet de récupérer un token d'authentification qui permettra d'obtenir le token nécessaire à la recherche de dossiers</help>
+  </input>
+
+  <input ref="login">
+    <label>Identifiant de connexion à l’API Rest de Stat’ADS</label>
+    <help>Identifiant de connexion à l’API Rest de Stat’ADS permettant d'obtenir le token nécessaire à la recherche de dossiers</help>
+  </input>
+
+  <secret ref="password">
+    <label>Mot de passe de l'identifiant de connexion à l’API Rest de Stat’ADS</label>
+    <help>Mot de passe de l'identifiant de connexion à l’API Rest de Stat’ADS permettant d'obtenir le token nécessaire à la recherche de dossiers</help>
+  </secret>
+
+  <input ref="search_url" type="url">
+    <label>URL de recherche de dossiers Cart@DS</label>
+    <help>Permet d'obtenir la liste des dossiers déposés sur une parcelle donnée depuis un appel effectué sur la fiche parcellaire du SIG</help>
+  </input>
+
+  <submit ref='submit'>
+    <label locale='jelix~ui.buttons.save'></label>
+  </submit>
+</form>

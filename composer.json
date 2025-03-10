@@ -1,0 +1,28 @@
+{
+    "name": "lizmap/lizmap-cartads-module",
+    "type": "jelix-module",
+    "description": "Jelix module for Lizmap, enabling interactions with Cart@DS.",
+    "keywords": [
+        "module",
+        "jelix",
+        "lizmap",
+        "cart@ds"
+    ],
+    "homepage": "https://www.3liz.com/",
+    "license": "MPL-2.0",
+    "authors": [
+        {
+            "name": "3Liz",
+            "email": "info@3liz.com"
+        }
+    ],
+    "require": {},
+    "minimum-stability": "stable",
+    "extra": {
+        "jelix": {
+            "modules": [
+                "cartads/"
+            ]
+        }
+    }
+}
