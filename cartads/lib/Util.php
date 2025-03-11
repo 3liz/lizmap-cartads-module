@@ -84,4 +84,45 @@ class Util {
         }
         return \jDb::getConnection($profile);
     }
+
+    public static function getParcellesLayer(string $repo, string $projectName): \qgisVectorLayer {
+        // Check project is a CartADS one
+        if (self::projectIsCartADS($repo, $projectName) != self::PROJECT_OK) {
+            return null;
+        }
+        // Get project
+        $project = \lizmap::getProject($repo . '~' . $projectName);
+        $layerParcelle = 'parcelles';
+        // Get parcelles layer
+        $layer = $project->findLayerByName($layerParcelle);
+        if (!$layer) {
+            return null;
+        }
+        // Get parcelles QGIS layer
+        $layerId = $layer->id;
+        $qgisLayer = $project->getLayer($layerId);
+        if (!$qgisLayer) {
+            return null;
+        }
+        return $qgisLayer;
+    }
+
+    public static function adaptBbox(array $bbox, float $width, float $height): array {
+        $bboxWidth = $bbox[2] - $bbox[0];
+        $bboxHeight = $bbox[3] - $bbox[1];
+        $ratio = $bboxWidth / $bboxHeight;
+        $imageRatio = $width / $height;
+        if ($ratio > $imageRatio) {
+            $newWidth = $bboxWidth;
+            $newHeight = $bboxWidth / $imageRatio;
+        } else {
+            $newHeight = $bboxHeight;
+            $newWidth = $bboxHeight * $imageRatio;
+        }
+        $bbox[0] -= ($newWidth - $bboxWidth) / 2;
+        $bbox[2] += ($newWidth - $bboxWidth) / 2;
+        $bbox[1] -= ($newHeight - $bboxHeight) / 2;
+        $bbox[3] += ($newHeight - $bboxHeight) / 2;
+        return $bbox;
+    }
 }

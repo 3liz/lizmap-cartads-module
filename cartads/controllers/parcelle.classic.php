@@ -75,4 +75,116 @@ class parcelleCtrl extends jController {
         return $resp;
     }
 
+    public function carte() {
+        $repo = $this->param('repository');
+        $projectName = $this->param('project');
+        // parcelles=31 AB 31;31 AB 32; 31 AC 27
+        $parcelles = $this->param('parcelles');
+        // taille de l'image requêtée
+        $width = $this->param('width');
+        $height = $this->param('height');
+
+        // default response for errors
+        $resp = $this->getResponse('json');
+
+        if (is_null($repo) ||
+            is_null($projectName) ||
+            is_null($parcelles) ||
+            is_null($width) ||
+            is_null($height)
+        ) {
+            $resp->setHttpStatus('404', 'Missing parameters');
+            $resp->data = array(
+                'code' => '404',
+                'message' => 'Missing parameters',
+                'details' => 'parcelles, width, height are mandatory',
+            );
+            return $resp;
+        }
+        $testCartADSProject = cartAdsUtil::projectIsCartADS($repo, $projectName);
+        if ($testCartADSProject != cartAdsUtil::PROJECT_OK) {
+            if ($testCartADSProject == cartAdsUtil::ERR_CODE_PROJECT_VARIABLE) {
+                $message = 'Missing project variable';
+            } else {
+                $message = 'Project is not a cartADS project';
+            }
+            $resp->setHttpStatus('500', 'Internal Server Error');
+            $resp->data = array(
+                'code' => '500',
+                'message' => 'Internal Server Error',
+                'details' => $message,
+            );
+            return $resp;
+        }
+
+        $project = \lizmap::getProject($repo . '~' . $projectName);
+        $getCapabilitiesRequest = \Lizmap\Request\Proxy::build($project, array(
+            'service' => 'WMS',
+            'version' => '1.3.0',
+            'request' => 'GetCapabilities',
+        ));
+        $getCapabilitiesResponse = $getCapabilitiesRequest->process();
+        if ($getCapabilitiesResponse->getCode() != 200) {
+            $resp->setHttpStatus('500', 'Internal Server Error');
+            $resp->data = array(
+                'code' => '500',
+                'message' => 'Internal Server Error',
+                'details' => 'Error while getting GetCapabilities',
+            );
+            return $resp;
+        }
+
+        $getCapabilities = \Lizmap\App\XmlTools::xmlFromString($getCapabilitiesResponse->getBodyAsString());
+        $layerName = (string) $getCapabilities->Capability->Layer->Name;
+        $crs = $project->getProj();
+        $parcelles = array_map('trim', explode(';', $parcelles));
+
+        $bbox = cartAdsDbClient::carteEmprise($repo, $projectName, $parcelles, $crs);
+        $bbox = cartAdsUtil::adaptBbox($bbox, $width, $height);
+        $parcelleIds = cartAdsDbClient::parcelleIds($repo, $projectName, $parcelles);
+
+        $getMapParams = array(
+            'service' => 'WMS',
+            'version' => '1.3.0',
+            'request' => 'GetMap',
+            'layers' => 'parcelles,'.$layerName,
+            'styles' => '',
+            'crs' => $crs,
+            'bbox' => implode(',', $bbox),
+            'width' => $width,
+            'height' => $height,
+            'format' => 'image/jpeg',
+            'dpi' => 96,
+            //'transparent' => 'true',
+            'exceptions' => 'application/vnd.ogc.se_inimage',
+            'selection' => 'parcelles:' . implode(', ', $parcelleIds),
+        );
+        $getMapRequest = \Lizmap\Request\Proxy::build(
+            $project,
+            $getMapParams,
+        );
+
+        $result = $getMapRequest->process();
+        if ($result->data == 'error') {
+            $resp->setHttpStatus('500', 'Internal Server Error');
+            $resp->data = array(
+                'code' => '500',
+                'message' => 'Internal Server Error',
+                'details' => 'Error while getting GetMap',
+            );
+            return $resp;
+        }
+
+        /** @var jResponseBinary $rep */
+        $resp = $this->getResponse('binary');
+        $resp->mimeType = $result->mime;
+        if (is_string($result->data) || is_callable($result->data)) {
+            $resp->content = $result->data;
+        }
+        $resp->doDownload = false;
+        $resp->outputFileName = 'carte_parcelles_' . implode('_', $parcelles) . '.jpg';
+        return $resp;
+        // faire une requête GetMap avec sélection sur la parcelles
+    }
+
 }
