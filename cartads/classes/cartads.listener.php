@@ -6,6 +6,20 @@ class cartadsListener extends \jEventListener
 {
     public function ongetMapAdditions($event)
     {
+        $repository = $event->repository;
+        $project = $event->project;
+
+        $projectNetADSCheck = cartAdsUtil::projectIsCartADS($repository, $project);
+        switch ($projectNetADSCheck) {
+            case cartAdsUtil::PROJECT_OK:
+                $js = array(jUrl::get('jelix~www:getfile', array('targetmodule' => 'cartads', 'file' => 'cartads.js')));
+                $event->add(
+                    array(
+                        'js' => $js,
+                    )
+                );
+                break;
+        }
     }
 
     public function ongetRedirectKeyParams($event)
