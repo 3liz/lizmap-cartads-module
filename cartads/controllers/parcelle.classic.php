@@ -13,7 +13,7 @@ class parcelleCtrl extends jController {
         $projectName = $this->param('project');
         $parcelleId = $this->param('parcelle_id');
         if (is_null($repo) || is_null($projectName) || is_null($parcelleId)) {
-            $resp->setHttpStatus('404');
+            $resp->setHttpStatus('404', 'Missing parameters');
             $resp->data = array(
                 'code' => '404',
                 'message' => 'Missing parameters',
@@ -170,7 +170,7 @@ class parcelleCtrl extends jController {
             $resp->data = array(
                 'code' => '500',
                 'message' => 'Internal Server Error',
-                'details' => 'Error while getting GetMap',
+                'details' => 'Error while getting GetMap request with ',
             );
             return $resp;
         }
