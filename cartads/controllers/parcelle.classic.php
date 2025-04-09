@@ -69,8 +69,8 @@ class parcelleCtrl extends jController {
         $parcellesCharge = cartAdsDbClient::charge($repo, $projectName, $parcelles);
 
         $resp = $this->getResponse('xml');
-        $resp->dataTpl = 'cartads~charge';
-        $resp->data->assign('parcelles', $parcellesCharge);
+        $resp->contentTpl = 'cartads~charge';
+        $resp->content->assign('parcelles', $parcellesCharge);
 
         return $resp;
     }
