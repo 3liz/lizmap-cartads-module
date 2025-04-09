@@ -36,13 +36,38 @@ const cartAds = function() {
         });
     }
 
+    function goToDossiers(dossiers) {
+        const url = cartAdsConfig.dossierUrl;
+        const requests = dossiers.map((dossier) => {
+            return fetch(`${url}?${new URLSearchParams({dossier_id: dossier})}`);
+        });
+        Promise.all(requests).then((responses) => {
+            return Promise.all(responses.map((response) => {
+                return response.json();
+            }));
+        }).then((data) => {
+            const parcelles =
+                data.filter((d) => d !== null)
+                    .map((d) => d.liste_parcelles) // get all lists of parcels
+                    .join(',') // join all lists into a single string
+                    .split(',').map((p) => p.trim()) // split by comma and trim
+                    .filter((value, index, array) => array.indexOf(value) === index) // remove duplicates
+            goToParcelles(parcelles);
+        });
+    }
+
     lizMap.events.on({
         uicreated: () => {
             const urlSearchParams = new URLSearchParams(window.location.search);
             const params = Object.fromEntries(urlSearchParams.entries());
 
-            if (params && params.parcelles) {
-                goToParcelles(params.parcelles.split(';').map((p) => p.trim()));
+            if (params) {
+                if (params.parcelles) {
+                    goToParcelles(params.parcelles.split(';').map((p) => p.trim()));
+                }
+                else if (params.dossiers) {
+                    goToDossiers(params.dossiers.split(';').map((p) => p.trim()));
+                }
             }
 
         }

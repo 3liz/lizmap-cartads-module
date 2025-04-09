@@ -12,10 +12,15 @@ class cartadsListener extends \jEventListener
         $projectNetADSCheck = cartAdsUtil::projectIsCartADS($repository, $project);
         switch ($projectNetADSCheck) {
             case cartAdsUtil::PROJECT_OK:
+                $jscode = array('const cartAdsConfig  = {' .
+                ' "dossierUrl":"' . jUrl::get('cartads~dossier:index', array('repository' => $repository, 'project' => $project)) . '",' .
+                ' "dossiersRechercheUrl":"' . jUrl::get('cartads~dossier:recherche', array('repository' => $repository, 'project' => $project)) . '"' .
+                '};');
                 $js = array(jUrl::get('jelix~www:getfile', array('targetmodule' => 'cartads', 'file' => 'cartads.js')));
                 $event->add(
                     array(
                         'js' => $js,
+                        'jscode' => $jscode,
                     )
                 );
                 break;

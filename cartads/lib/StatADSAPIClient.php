@@ -111,7 +111,7 @@ class StatADSAPIClient {
         $searchParams = http_build_query(array(
             'refresh' => 'false',
             'token' => $token,
-            'nom_dossier	' => '[*'.$dossierId.'*]',
+            'nom_dossier' => '[*'.$dossierId.'*]',
         ));
         $searchURL .= '?' . $searchParams;
 

@@ -6,6 +6,43 @@ use \cartADS\StatADSAPIClient;
 
 class dossierCtrl extends jController {
 
+    public function index() {
+        $resp = $this->getResponse('json');
+
+        $repo = $this->param('repository');
+        $projectName = $this->param('project');
+        $dossierId = $this->param('dossier_id');
+        if (is_null($repo) || is_null($projectName) || is_null($dossierId)) {
+            $resp->setHttpStatus('404', 'Not Found');
+            $resp->data = array(
+                'code' => '404',
+                'message' => 'Missing parameters',
+                'details' => 'repository, project dossier_id are mandatory',
+            );
+
+            return $resp;
+        }
+        $testCartADSProject = cartAdsUtil::projectIsCartADS($repo, $projectName);
+        if ($testCartADSProject != cartAdsUtil::PROJECT_OK) {
+            if ($testCartADSProject == cartAdsUtil::ERR_CODE_PROJECT_VARIABLE) {
+                $message = 'Missing project variable';
+            } else {
+                $message = 'Project is not a cartADS project';
+            }
+            $resp->setHttpStatus('500', 'Internal Server Error');
+            $resp->data = array(
+                'code' => '500',
+                'message' => 'Internal Server Error',
+                'details' => $message,
+            );
+            return $resp;
+        }
+        $apiClient = new StatADSAPIClient($repo, $projectName);
+        $dossiers = $apiClient->getDossier($dossierId);
+        $resp->data = $dossiers;
+        return $resp;
+    }
+
     public function recherche() {
         $resp = $this->getResponse('json');
 
