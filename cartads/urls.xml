@@ -5,4 +5,6 @@
     <url pathinfo="/:repository/:project/parcelle/charge"  action="parcelle:charge"/>
     <url pathinfo="/:repository/:project/parcelle/carte"  action="parcelle:carte"/>
 
+    <url pathinfo="/:repository/:project/recherche/dossiers"  action="dossier:recherche"/>
+
 </suburls>

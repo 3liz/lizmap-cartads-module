@@ -145,4 +145,50 @@ class StatADSAPIClient {
 
         return $dossiers[0];
     }
+
+    public function recherche(array $params) {
+        // get token
+        $token = $this->getToken();
+        if (!$token) {
+            return null;
+        }
+
+        // build search URL
+        $searchURL = $this->config['search_url'];
+        $searchParams = http_build_query(array_merge($params, array(
+            'refresh' => 'false',
+            'token' => $token,
+        )));
+        $searchURL .= '?' . $searchParams;
+
+        // send request and get response
+        $options = array();
+        list($data, $mime, $code) = \Lizmap\Request\Proxy::getRemoteData($searchURL, $options);
+
+        if (floor($code / 100) >= 4) {
+            \jLog::log('unable to query Stat\'ADS API (' . $searchURL . ') HTTP code '.$code, 'error');
+
+            return null;
+        }
+
+        if (strpos($mime, 'application/json') !== 0) {
+            \jLog::log('unable to query Stat\'ADS API (' . $searchURL . ') mime-type '.$mime, 'error');
+
+            return null;
+        }
+
+        $resp = json_decode($data);
+
+        if (!property_exists($resp, 'data')) {
+            \jLog::log('unable to query Stat\'ADS API (' . $searchURL . ')', 'error');
+
+            return null;
+        }
+
+        $dossiers = $resp->data;
+        // sort by date_depot descending
+        usort($dossiers, fn($a, $b) => strcmp($b->date_depot, $a->date_depot));
+
+        return $dossiers[0];
+    }
 }
