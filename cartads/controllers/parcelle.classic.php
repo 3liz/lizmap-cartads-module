@@ -13,10 +13,10 @@ class parcelleCtrl extends jController {
         $projectName = $this->param('project');
         $parcelleId = $this->param('parcelle_id');
         if (is_null($repo) || is_null($projectName) || is_null($parcelleId)) {
-            $resp->setHttpStatus('404', 'Missing parameters');
+            $resp->setHttpStatus('400', 'Bad Request');
             $resp->data = array(
-                'code' => '404',
-                'message' => 'Missing parameters',
+                'code' => '400',
+                'message' => 'Bad Request',
                 'details' => 'repository, project, parcelle_id are mandatory',
             );
             return $resp;
@@ -40,6 +40,15 @@ class parcelleCtrl extends jController {
         $dossiers = $apiClient->recherche(array(
             'parcelle' => $parcelleId,
         ));
+        if (!$dossiers) {
+            $resp->setHttpStatus('404', 'Not Found');
+            $resp->data = array(
+                'code' => '404',
+                'message' => 'Not Found',
+                'details' => 'La recherche par parcelle n\'a retourné aucun dossier',
+            );
+            return $resp;
+        }
         $resp->data = $dossiers;
         return $resp;
     }
@@ -95,10 +104,10 @@ class parcelleCtrl extends jController {
             is_null($width) ||
             is_null($height)
         ) {
-            $resp->setHttpStatus('404', 'Missing parameters');
+            $resp->setHttpStatus('400', 'Bad Request');
             $resp->data = array(
-                'code' => '404',
-                'message' => 'Missing parameters',
+                'code' => '400',
+                'message' => 'Bad Request',
                 'details' => 'parcelles, width, height are mandatory',
             );
             return $resp;

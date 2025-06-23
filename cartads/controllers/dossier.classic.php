@@ -13,10 +13,10 @@ class dossierCtrl extends jController {
         $projectName = $this->param('project');
         $dossierId = $this->param('dossier_id');
         if (is_null($repo) || is_null($projectName) || is_null($dossierId)) {
-            $resp->setHttpStatus('404', 'Not Found');
+            $resp->setHttpStatus('400', 'Bad Request');
             $resp->data = array(
-                'code' => '404',
-                'message' => 'Missing parameters',
+                'code' => '400',
+                'message' => 'Bad Request',
                 'details' => 'repository, project dossier_id are mandatory',
             );
 
@@ -38,8 +38,18 @@ class dossierCtrl extends jController {
             return $resp;
         }
         $apiClient = new cartAdsApiClient($repo, $projectName);
-        $dossiers = $apiClient->getDossier($dossierId);
-        $resp->data = $dossiers;
+        $dossier = $apiClient->getDossier($dossierId);
+        if (!$dossier) {
+            $resp->setHttpStatus('404', 'Not Found');
+            $resp->data = array(
+                'code' => '404',
+                'message' => 'Not Found',
+                'details' => 'Dossier `'.$dossierId.'`non trouvé',
+            );
+            return $resp;
+        }
+        // dossier found
+        $resp->data = $dossier;
         return $resp;
     }
 
@@ -68,10 +78,10 @@ class dossierCtrl extends jController {
         unset($params['ctrl']);
 
         if (count($params) == 0) {
-            $resp->setHttpStatus('404', 'Not Found');
+            $resp->setHttpStatus('400', 'Bad Request');
             $resp->data = array(
-                'code' => '404',
-                'message' => 'Missing parameters',
+                'code' => '400',
+                'message' => 'Bad Request',
                 'details' => 'At least one parameter is mandatory',
             );
             return $resp;
@@ -94,6 +104,15 @@ class dossierCtrl extends jController {
         }
         $apiClient = new cartAdsApiClient($repo, $projectName);
         $dossiers = $apiClient->recherche($params);
+        if (!$dossiers) {
+            $resp->setHttpStatus('404', 'Not Found');
+            $resp->data = array(
+                'code' => '404',
+                'message' => 'Not Found',
+                'details' => 'La recherche n\'a retourné aucun dossier',
+            );
+            return $resp;
+        }
         $resp->data = $dossiers;
         return $resp;
     }
