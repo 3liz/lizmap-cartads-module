@@ -61,7 +61,7 @@ class parcelleCtrl extends jController {
 
         $resp = $this->getResponse('text');
         if (is_null($repo) || is_null($projectName) || is_null($parcelles)) {
-            $resp->setHttpStatus('404', 'Missing parameters');
+            $resp->setHttpStatus('400', 'Bad Request');
             $resp->data = 'repository, project, parcelles[] are mandatory';
             return $resp;
         }
