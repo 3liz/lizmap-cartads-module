@@ -1,7 +1,7 @@
 <?php
 namespace cartADS;
 
-class AdsCsAPIClient {
+class AdsCsApiClient {
 
     public function __construct(string $repo, string $projectName) {
 

@@ -2,7 +2,7 @@
 
 use \cartADS\dbClient as cartAdsDbClient;
 use \cartADS\Util as cartAdsUtil;
-use \cartADS\AdsCsAPIClient;
+use \cartADS\AdsCsApiClient as cartAdsApiClient;
 
 class parcelleCtrl extends jController {
 
@@ -36,7 +36,7 @@ class parcelleCtrl extends jController {
             );
             return $resp;
         }
-        $apiClient = new AdsCsAPIClient($repo, $projectName);
+        $apiClient = new cartAdsApiClient($repo, $projectName);
         $dossiers = $apiClient->recherche(array(
             'parcelle' => $parcelleId,
         ));
