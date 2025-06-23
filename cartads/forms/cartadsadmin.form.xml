@@ -1,23 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://jelix.org/ns/forms/1.1">
-  <input ref="auth_url" type="url">
-    <label>URL de connexion de l’API Rest de Stat’ADS</label>
-    <help>Permet de récupérer un token d'authentification qui permettra d'obtenir le token nécessaire à la recherche de dossiers</help>
+  <input ref="auth_url" type="url" required="true">
+    <label>URL de récupération du token d’authentification</label>
+    <help>Permet de récupérer un token d'authentification de l’API SIG Rest Cart@ds qui permettra l'accès aux données des dossiers. Exemple : https://[nom de domaine]/cartads/api/auth/GetToken</help>
   </input>
 
-  <input ref="login">
-    <label>Identifiant de connexion à l’API Rest de Stat’ADS</label>
-    <help>Identifiant de connexion à l’API Rest de Stat’ADS permettant d'obtenir le token nécessaire à la recherche de dossiers</help>
+  <input ref="clientId" required="true">
+    <label>Nom du client Cart@DS</label>
+    <help>Identifiant du client pour accès à l’API SIG Rest Cart@DS</help>
   </input>
 
-  <secret ref="password">
-    <label>Mot de passe de l'identifiant de connexion à l’API Rest de Stat’ADS</label>
-    <help>Mot de passe de l'identifiant de connexion à l’API Rest de Stat’ADS permettant d'obtenir le token nécessaire à la recherche de dossiers</help>
+  <input ref="login" required="true">
+    <label>Utilisateur Cart@DS</label>
+    <help>Utilisateur Cart@DS avec droits sur les communes (ne pas paramétrer de profil !)</help>
+  </input>
+
+  <secret ref="password" required="true">
+    <label>Mot de passe de l'utilisateur Cart@DS</label>
+    <help>Mot de passe de l'utilisateur Cart@DS permettant d'obtenir le token nécessaire à l'accès aux données des dossiers fournis par l'API SIG Rest Cart@DS.</help>
   </secret>
 
-  <input ref="search_url" type="url">
-    <label>URL de recherche de dossiers Cart@DS</label>
-    <help>Permet d'obtenir la liste des dossiers déposés sur une parcelle donnée depuis un appel effectué sur la fiche parcellaire du SIG</help>
+  <input ref="search_url" type="url" required="true">
+    <label>URL de recherche de dossiers</label>
+    <help>Permet de récupérer une liste de dossiers en fonction de critères de recherche. Exemple : https://[nom de domaine]/cartads/api/Sig/Dossiers</help>
+  </input>
+
+  <input ref="dossier_url" type="url" required="true">
+    <label>URL de récupération des données d'un dossier</label>
+    <help>Permet de récupérer les données d'un dossier. Exemple : https://[nom de domaine]/cartads/api/Sig/Dossier</help>
   </input>
 
   <submit ref='submit'>
