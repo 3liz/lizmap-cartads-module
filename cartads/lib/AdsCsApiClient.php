@@ -31,26 +31,31 @@ class AdsCsApiClient {
         list($data, $mime, $code) = \Lizmap\Request\Proxy::getRemoteData($authURL, $options);
 
         if (floor($code / 100) >= 4) {
-            \jLog::log('unable to query ADS CS API (' . $authURL . ') HTTP code '.$code, 'error');
+            \jLog::log(
+                'unable to query ADS CS API ('.$authURL.') HTTP code '.$code.' for payload '.json_encode($authPayload),
+                'error'
+            );
 
             return null;
         }
 
         if (strpos($mime, 'application/json') !== 0) {
-            \jLog::log('unable to query ADS CS API (' . $authURL . ') mime-type '.$mime, 'error');
+            \jLog::log('unable to query ADS CS API ('.$authURL.') mime-type '.$mime.' for payload '.json_encode($authPayload),
+                'error'
+            );
 
             return null;
         }
 
         $resp = json_decode($data);
 
-        if (!property_exists($resp, 'token')) {
-            \jLog::log('unable to query ADS CS API (' . $authURL . ')', 'error');
+        if (!property_exists($resp, 'Token')) {
+            \jLog::log('Response from ADS CS API ('.$authURL.') does not contain Token: '.json_encode($resp), 'error');
 
             return null;
         }
 
-        return $resp->token;
+        return $resp->Token;
     }
 
     public function getDossier(string $dossierId) {
@@ -66,18 +71,19 @@ class AdsCsApiClient {
             'idDossier' => $dossierId,
         );
 
+        $url = $dossierURL.'?';
+        $url .= http_build_query($dossierPayload);
+
         // prepare request
         $options = array(
-            'method' => 'post',
-            'body' => json_encode($dossierPayload),
+            'method' => 'get',
             'headers' => array(
-                'Content-type' => 'application/json',
                 'Authorization' => 'Bearer ' . $token,
             ),
         );
 
         // send request and get response
-        list($data, $mime, $code) = \Lizmap\Request\Proxy::getRemoteData($dossierURL, $options);
+        list($data, $mime, $code) = \Lizmap\Request\Proxy::getRemoteData($url, $options);
 
         if (floor($code / 100) >= 4) {
             \jLog::log(
@@ -135,22 +141,23 @@ class AdsCsApiClient {
             return null;
         }
 
+        $url = $searchURL.'?';
+        $url .= http_build_query($searchPayload);
+
         // prepare request
         $options = array(
-            'method' => 'post',
-            'body' => json_encode($searchPayload),
+            'method' => 'get',
             'headers' => array(
-                'Content-type' => 'application/json',
                 'Authorization' => 'Bearer ' . $token,
             ),
         );
 
         // send request and get response
-        list($data, $mime, $code) = \Lizmap\Request\Proxy::getRemoteData($searchURL, $options);
+        list($data, $mime, $code) = \Lizmap\Request\Proxy::getRemoteData($url, $options);
 
         if (floor($code / 100) >= 4) {
             \jLog::log(
-                'unable to query ADS CS API (' . $searchURL . ') HTTP code '.$code.' for payload '.json_encode($searchPayload),
+                'unable to query ADS CS API ('.$searchURL.') HTTP code '.$code.' for payload '.json_encode($searchPayload),
                 'error'
             );
 
@@ -159,7 +166,7 @@ class AdsCsApiClient {
 
         if (strpos($mime, 'application/json') !== 0) {
             \jLog::log(
-                'unable to query ADS CS API (' . $searchURL . ') mime-type '.$mime.' for payload '.json_encode($searchPayload),
+                'unable to query ADS CS API ('.$searchURL.') mime-type '.$mime.' for payload '.json_encode($searchPayload),
                 'error'
             );
 
@@ -170,7 +177,7 @@ class AdsCsApiClient {
 
         if (!is_array($resp) && count($resp) == 0) {
             \jLog::log(
-                'unable to query ADS CS API (' . $searchURL . ') for payload '.json_encode($searchPayload),
+                'unable to query ADS CS API ('.$searchURL.') for payload '.json_encode($searchPayload),
                 'error'
             );
 
