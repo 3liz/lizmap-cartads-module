@@ -105,7 +105,7 @@ class AdsCsApiClient {
 
         $resp = json_decode($data);
 
-        if (!property_exists($resp, 'idDossier')) {
+        if (!property_exists($resp, 'IdDossier')) {
             \jLog::log(
                 'unable to query ADS CS API ('.$dossierURL.' with idDossier '.$dossierId.')',
                 'error'
