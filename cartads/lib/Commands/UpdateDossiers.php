@@ -51,6 +51,7 @@ class UpdateDossiers extends ModuleCommandAbstract
             }
         }
 
+        $output->writeln('Recherche de dossiers modifiés depuis le '.$dateModification);
         $apiClient = new cartAdsApiClient($repo, $projectName);
         $dossiers = $apiClient->recherche(array(
             'dateModification' => $dateModification,
