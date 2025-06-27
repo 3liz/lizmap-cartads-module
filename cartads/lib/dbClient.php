@@ -279,45 +279,47 @@ class dbClient {
         ";
         $cnx->exec($sql);
 
-        // Mise à jour des parcelles des dossiers
-        $sql = "
-        INSERT INTO cartads_dossier_parcelle (id_dossier, nom_dossier, cartads_parcelle)
-        SELECT d.id_dossier, d.nom_dossier, trim(unnest(string_to_array(d.liste_parcelles, ','))) cartads_parcelle
-        FROM cartads_dossier d
-        WHERE id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
-        ON CONFLICT (id_dossier, cartads_parcelle) DO NOTHING
-        RETURNING id_dossier, cartads_parcelle
-        ";
-        $cnx->exec($sql);
+        if (count($dossiersParcelles) > 0 && count($nouveauxDossiers) > 0) {
+            // Mise à jour des parcelles des dossiers
+            $sql = "
+            INSERT INTO cartads_dossier_parcelle (id_dossier, nom_dossier, cartads_parcelle)
+            SELECT d.id_dossier, d.nom_dossier, trim(unnest(string_to_array(d.liste_parcelles, ','))) cartads_parcelle
+            FROM cartads_dossier d
+            WHERE id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
+            ON CONFLICT (id_dossier, cartads_parcelle) DO NOTHING
+            RETURNING id_dossier, cartads_parcelle
+            ";
+            $cnx->exec($sql);
 
-        // Récupération du code geo_parcelle
-        $sql = "
-        UPDATE cartads_dossier_parcelle
-        SET geo_parcelle = p.geo_parcelle
-        FROM cartads_parcelle p
-        WHERE cartads_dossier_parcelle.cartads_parcelle = p.cartads_parcelle
-        AND cartads_dossier_parcelle IS NULL;
-        ";
-        $cnx->exec($sql);
+            // Récupération du code geo_parcelle
+            $sql = "
+            UPDATE cartads_dossier_parcelle
+            SET geo_parcelle = p.geo_parcelle
+            FROM cartads_parcelle p
+            WHERE cartads_dossier_parcelle.cartads_parcelle = p.cartads_parcelle
+            AND cartads_dossier_parcelle IS NULL;
+            ";
+            $cnx->exec($sql);
 
-        // Calcul des géométries des dossiers
-        $sql = "
-        INSERT INTO cartads_dossier_geo (id_dossier, nom_dossier, geom, complete_geom)
-        SELECT id_dossier, nom_dossier, geom, complete_geom
-        FROM (
-            SELECT cdp.id_dossier, cdp.nom_dossier, ST_UNION(cp.geom) as geom,
-                COUNT(cdp.cartads_parcelle) AS defined_parcelle,
-                COUNT(cp.cartads_parcelle) AS found_parcelle,
-                COUNT(cdp.cartads_parcelle) = COUNT(cp.cartads_parcelle) AS complete_geom
-            FROM admin_sol.cartads_dossier_parcelle cdp
-            LEFT JOIN admin_sol.cartads_parcelle cp ON cdp.cartads_parcelle = cp.cartads_parcelle
-            WHERE cdp.id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
-            GROUP BY cdp.id_dossier, cdp.nom_dossier
-        ) AS calculate_cdg
-        WHERE found_parcelle > 0
-        ORDER BY id_dossier
-        ";
-        $cnx->exec($sql);
+            // Calcul des géométries des dossiers
+            $sql = "
+            INSERT INTO cartads_dossier_geo (id_dossier, nom_dossier, geom, complete_geom)
+            SELECT id_dossier, nom_dossier, geom, complete_geom
+            FROM (
+                SELECT cdp.id_dossier, cdp.nom_dossier, ST_UNION(cp.geom) as geom,
+                    COUNT(cdp.cartads_parcelle) AS defined_parcelle,
+                    COUNT(cp.cartads_parcelle) AS found_parcelle,
+                    COUNT(cdp.cartads_parcelle) = COUNT(cp.cartads_parcelle) AS complete_geom
+                FROM admin_sol.cartads_dossier_parcelle cdp
+                LEFT JOIN admin_sol.cartads_parcelle cp ON cdp.cartads_parcelle = cp.cartads_parcelle
+                WHERE cdp.id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
+                GROUP BY cdp.id_dossier, cdp.nom_dossier
+            ) AS calculate_cdg
+            WHERE found_parcelle > 0
+            ORDER BY id_dossier
+            ";
+            $cnx->exec($sql);
+        }
 
         // Retourne le nombre de dossiers traités
         return new ResultUpdateDossiers(count($values), count($nouveauxDossiers), count($dossiersParcelles));
