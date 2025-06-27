@@ -208,7 +208,7 @@ class dbClient {
         $results = $stmt->fetchAll();
         $dossiersParcelles = array();
         foreach ($results as $result) {
-            $dossiersParcelles[] = $result['id_dossier'];
+            $dossiersParcelles[] = $result->id_dossier;
         }
 
         // liste des nouveaux dossiers
@@ -222,7 +222,7 @@ class dbClient {
         $results = $stmt->fetchAll();
         $nouveauxDossiers = array();
         foreach ($results as $result) {
-            $nouveauxDossiers[] = $result['id_dossier'];
+            $nouveauxDossiers[] = $result->id_dossier;
         }
 
         // suppression des parcelles et des géométries des dossiers dont la liste des parcelles a changé
