@@ -41,7 +41,7 @@ class AdsCsApiDossier {
      * @return string
      */
     public function getAdresse() {
-        return trim($this->data->NVoirieTerrain ?? ''.' '.$this->data->AdresseTerrain);
+        return trim(($this->data->NVoirieTerrain ?? '').' '.($this->data->AdresseTerrain ?? ''));
     }
 
     /**
