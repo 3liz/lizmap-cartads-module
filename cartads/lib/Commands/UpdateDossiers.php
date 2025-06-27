@@ -10,6 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use \cartADS\dbClient as cartAdsDbClient;
 use \cartADS\Util as cartAdsUtil;
 use \cartADS\AdsCsApiClient as cartAdsApiClient;
+use \carAds\ResultUpdateDossiers;
 
 
 class UpdateDossiers extends ModuleCommandAbstract
@@ -57,8 +58,36 @@ class UpdateDossiers extends ModuleCommandAbstract
             'offset' => 0,
         ));
 
-        $nb = cartAdsDbClient::updateDossiers($repo, $projectName, $dossiers);
-        $output->writeln($nb.' dossiers updated');
+        $result = cartAdsDbClient::updateDossiers($repo, $projectName, $dossiers);
+        if ($result->getNbTotal() == 0) {
+            $output->writeln('Aucun dossier mis à jour');
+            return 0;
+        }
+        $nb_total = $result->getNbTotal();
+        $nb_new = $result->getNbNew();
+        $nb_update_parcelles = $result->getNbUpdateParcelles();
+        $message = '';
+        if ($nb_total == 1) {
+            $message = '1 dossier mis à jour';
+        } else {
+            $message = $nb_total.' dossiers mis à jour';
+        }
+        if ($nb_new > 0) {
+            if ($nb_new == 1) {
+                $message .= ' dont 1 nouveau';
+            } else {
+                $message .= ' dont '.$nb_new.' nouveaux';
+            }
+        }
+        if ($nb_update_parcelles > 0) {
+            if ($nb_update_parcelles == 1) {
+                $message .= ' dont 1 dossier';
+            } else {
+                $message .= ' dont '.$nb_update_parcelles.' dossiers';
+            }
+            $message .= ' avec une nouvelle liste de parcelles';
+        }
+        $output->writeln($message);
         return 0;
     }
 }

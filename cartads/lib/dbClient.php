@@ -2,10 +2,12 @@
 namespace cartADS;
 
 use \cartADS\AdsCsApiDossier as cartAdsApiDossier;
+use \cartAds\ResultUpdateDossiers;
+
 
 class dbClient {
 
-    public static function charge(string $repo, string $projectName, array $parcelles) {
+    public static function charge(string $repo, string $projectName, array $parcelles){
         // Get connection from project
         $cnx = Util::getConnection($repo, $projectName);
         if (!$cnx) {
@@ -155,15 +157,21 @@ class dbClient {
     }
 
 
-    public static function updateDossiers(string $repo, string $projectName, array $dossiers) {
+    public static function updateDossiers(string $repo, string $projectName, array $dossiers): ResultUpdateDossiers
+    {
+        $nullResult = new ResultUpdateDossiers();
+        if (count($dossiers) == 0) {
+            return $nullResult; // no dossiers to insert and update
+        }
+
         // Get connection from project
         $cnx = Util::getConnection($repo, $projectName);
         if (!$cnx) {
-            return null;
+            return $nullResult; // no dossiers to insert and update
         }
 
         // Clear table new_cartads_dossier
-        $sql = 'TRUNCATE TABLE new_cartads_dossier';
+        $sql = 'TRUNCATE TABLE new_cartads_dossier RESTART IDENTITY';
         $cnx->exec($sql);
         // Insert new dossiers
         $values = array();
@@ -171,143 +179,147 @@ class dbClient {
             $dossier = new cartAdsApiDossier($d);
             $values[] = $dossier->getSqlValues();
         }
-        if (count($values) > 0) {
-            // insert into temp table
-            $sql = "
-            INSERT INTO new_cartads_dossier (
-            id_dossier, nom_dossier, commune, n_commune, adresse,
-            liste_parcelles, type_dossier, annee, date_depot,
-            date_limite_instruction, date_modification_dossier,
-            date_avis_instructeur, date_decision, date_notification_decision,
-            stade, autorite, instructeur, avis_instructeur, signataire,
-            decision, demandeur_principal, url_dossier) VALUES
-            ".join(",\n", $values);
-            $cnx->exec($sql);
 
-            // liste des dossiers dont la liste des parcelles a changé
-            $sql = "
-            SELECT d.id_dossier
-            FROM cartads_dossier d
-            JOIN new_cartads_dossier n ON n.id_dossier = d.id_dossier
-            WHERE d.liste_parcelles != n.liste_parcelles
-            AND d.date_modification_dossier < n.date_modification_dossier
-            ";
-            $stmt = $cnx->query($sql);
-            $results = $stmt->fetchAll();
-            $dossiersParcelles = array();
-            foreach ($results as $result) {
-                $dossiersParcelles[] = $result['id_dossier'];
-            }
+        if (count($values) == 0) {
+            return $nullResult; // no dossiers to insert and update
+        }
 
-            // liste des nouveaux dossiers
-            $sql = "
-            SELECT d.id_dossier
-            FROM cartads_dossier d
-            LEFT JOIN new_cartads_dossier n ON n.id_dossier = d.id_dossier
-            WHERE n.id_dossier IS NULL
-            ";
-            $stmt = $cnx->query($sql);
-            $results = $stmt->fetchAll();
-            $NouveauxDossiers = array();
-            foreach ($results as $result) {
-                $NouveauxDossiers[] = $result['id_dossier'];
-            }
+        // insert into temp table
+        $sql = "
+        INSERT INTO new_cartads_dossier (
+        id_dossier, nom_dossier, commune, n_commune, adresse,
+        liste_parcelles, type_dossier, annee, date_depot,
+        date_limite_instruction, date_modification_dossier,
+        date_avis_instructeur, date_decision, date_notification_decision,
+        stade, autorite, instructeur, avis_instructeur, signataire,
+        decision, demandeur_principal, url_dossier) VALUES
+        ".join(",\n", $values);
+        $cnx->exec($sql);
 
-            // Nettoyage des dossiers dont la liste des parcelles a changé.
+        // liste des dossiers dont la liste des parcelles a changé
+        $sql = "
+        SELECT d.id_dossier
+        FROM cartads_dossier d
+        JOIN new_cartads_dossier n ON n.id_dossier = d.id_dossier
+        WHERE d.liste_parcelles != n.liste_parcelles
+        AND d.date_modification_dossier < n.date_modification_dossier
+        ";
+        $stmt = $cnx->query($sql);
+        $results = $stmt->fetchAll();
+        $dossiersParcelles = array();
+        foreach ($results as $result) {
+            $dossiersParcelles[] = $result['id_dossier'];
+        }
+
+        // liste des nouveaux dossiers
+        $sql = "
+        SELECT n.id_dossier
+        FROM new_cartads_dossier n
+        LEFT JOIN cartads_dossier d ON n.id_dossier = d.id_dossier
+        WHERE d.id_dossier IS NULL
+        ";
+        $stmt = $cnx->query($sql);
+        $results = $stmt->fetchAll();
+        $nouveauxDossiers = array();
+        foreach ($results as $result) {
+            $nouveauxDossiers[] = $result['id_dossier'];
+        }
+
+        // suppression des parcelles et des géométries des dossiers dont la liste des parcelles a changé
+        if (count($dossiersParcelles) > 0) {
             $sql = "
             DELETE FROM cartads_dossier_parcelle WHERE id_dossier IN (".implode(',', $dossiersParcelles).")
             ";
             $cnx->exec($sql);
             $sql = "
-            DELETE FROM cartads_dossier_geo WHERE id_dossier IN (".implode(',', $NouveauxDossiers).")
+            DELETE FROM cartads_dossier_geo WHERE id_dossier IN (".implode(',', $dossiersParcelles).")
             ";
             $cnx->exec($sql);
-
-            // ajout et mise à jour des dossiers
-            $sql = "
-            INSERT INTO cartads_dossier (
-            id_dossier, nom_dossier, commune, n_commune, adresse,
-            liste_parcelles, type_dossier, annee, date_depot,
-            date_limite_instruction, date_modification_dossier,
-            date_avis_instructeur, date_decision, date_notification_decision,
-            stade, autorite, instructeur, avis_instructeur, signataire,
-            decision, demandeur_principal, url_dossier)
-            SELECT id_dossier, nom_dossier, commune, n_commune, adresse,
-            liste_parcelles, type_dossier, annee, date_depot,
-            date_limite_instruction, date_modification_dossier,
-            date_avis_instructeur, date_decision, date_notification_decision,
-            stade, autorite, instructeur, avis_instructeur, signataire,
-            decision, demandeur_principal, url_dossier
-            FROM new_cartads_dossier
-            ORDER BY id_dossier ASC
-            ON CONFLICT (id_dossier) DO UPDATE
-            SET commune = EXCLUDED.commune,
-                n_commune = EXCLUDED.n_commune,
-                adresse = EXCLUDED.adresse,
-                liste_parcelles = EXCLUDED.liste_parcelles,
-                type_dossier = EXCLUDED.type_dossier,
-                annee = EXCLUDED.annee,
-                date_depot = EXCLUDED.date_depot,
-                date_limite_instruction = EXCLUDED.date_limite_instruction,
-                date_modification_dossier = EXCLUDED.date_modification_dossier,
-                date_avis_instructeur = EXCLUDED.date_avis_instructeur,
-                date_decision = EXCLUDED.date_decision,
-                date_notification_decision = EXCLUDED.date_notification_decision,
-                stade = EXCLUDED.stade,
-                autorite = EXCLUDED.autorite,
-                instructeur = EXCLUDED.instructeur,
-                avis_instructeur = EXCLUDED.avis_instructeur,
-                signataire = EXCLUDED.signataire,
-                decision = EXCLUDED.decision,
-                demandeur_principal = EXCLUDED.demandeur_principal,
-                url_dossier = EXCLUDED.url_dossier
-            RETURNING id_dossier
-            ";
-            $cnx->exec($sql);
-
-            // Mise à jour des parcelles des dossiers
-            $sql = "
-            INSERT INTO cartads_dossier_parcelle (id_dossier, nom_dossier, cartads_parcelle)
-            SELECT d.id_dossier, d.nom_dossier, trim(unnest(string_to_array(liste_parcelles, ','))) cartads_parcelle
-            FROM cartads_dossier d
-            WHERE id_dossier IN (".implode(',', array_merge($dossiersParcelles, $NouveauxDossiers)).")
-            ON CONFLICT (id_dossier, cartads_parcelle) DO NOTHING
-            RETURNING id_dossier, cartads_parcelle
-            ";
-            $cnx->exec($sql);
-
-            // Récupération du code geo_parcelle
-            $sql = "
-            UPDATE cartads_dossier_parcelle
-            SET geo_parcelle = p.geo_parcelle
-            FROM cartads_parcelle p
-            WHERE cartads_dossier_parcelle.cartads_parcelle = p.cartads_parcelle
-            AND cartads_dossier_parcelle IS NULL;
-            ";
-            $cnx->exec($sql);
-
-            // Calcul des géométries des dossiers
-            $sql = "
-            INSERT INTO INSERT INTO admin_sol.cartads_dossier_geo (id_dossier, nom_dossier, geom, complete_geom)
-            SELECT id_dossier, nom_dossier, geom, complete_geom
-            FROM (
-                SELECT cdp.id_dossier, cdp.nom_dossier, ST_UNION(cp.geom) as geom,
-                    COUNT(cdp.cartads_parcelle) AS defined_parcelle
-                    COUNT(cp.cartads_parcelle) AS found_parcelle
-                    COUNT(cdp.cartads_parcelle) = COUNT(cp.cartads_parcelle) AS complete_geom
-                FROM admin_sol.cartads_dossier_parcelle cdp
-                LEFT JOIN admin_sol.cartads_parcelle cp ON cdp.cartads_parcelle = cp.cartads_parcelle
-                WHERE cdp.id_dossier IN (".implode(',', array_merge($dossiersParcelles, $NouveauxDossiers)).")
-                GROUP BY cdp.id_dossier, cdp.nom_dossier
-            ) AS calculate_cdg
-            WHERE found_parcelle > 0
-            ORDER BY id_dossier
-            ";
-            $cnx->exec($sql);
-
-            // Retourne le nombre de dossiers traités
-            return count($dossiersParcelles) + count($NouveauxDossiers);
         }
-        return 0;
+
+        // ajout et mise à jour des dossiers
+        $sql = "
+        INSERT INTO cartads_dossier (
+        id_dossier, nom_dossier, commune, n_commune, adresse,
+        liste_parcelles, type_dossier, annee, date_depot,
+        date_limite_instruction, date_modification_dossier,
+        date_avis_instructeur, date_decision, date_notification_decision,
+        stade, autorite, instructeur, avis_instructeur, signataire,
+        decision, demandeur_principal, url_dossier)
+        SELECT id_dossier, nom_dossier, commune, n_commune, adresse,
+        liste_parcelles, type_dossier, annee, date_depot,
+        date_limite_instruction, date_modification_dossier,
+        date_avis_instructeur, date_decision, date_notification_decision,
+        stade, autorite, instructeur, avis_instructeur, signataire,
+        decision, demandeur_principal, url_dossier
+        FROM new_cartads_dossier
+        ORDER BY id_dossier ASC
+        ON CONFLICT (id_dossier) DO UPDATE
+        SET commune = EXCLUDED.commune,
+            n_commune = EXCLUDED.n_commune,
+            adresse = EXCLUDED.adresse,
+            liste_parcelles = EXCLUDED.liste_parcelles,
+            type_dossier = EXCLUDED.type_dossier,
+            annee = EXCLUDED.annee,
+            date_depot = EXCLUDED.date_depot,
+            date_limite_instruction = EXCLUDED.date_limite_instruction,
+            date_modification_dossier = EXCLUDED.date_modification_dossier,
+            date_avis_instructeur = EXCLUDED.date_avis_instructeur,
+            date_decision = EXCLUDED.date_decision,
+            date_notification_decision = EXCLUDED.date_notification_decision,
+            stade = EXCLUDED.stade,
+            autorite = EXCLUDED.autorite,
+            instructeur = EXCLUDED.instructeur,
+            avis_instructeur = EXCLUDED.avis_instructeur,
+            signataire = EXCLUDED.signataire,
+            decision = EXCLUDED.decision,
+            demandeur_principal = EXCLUDED.demandeur_principal,
+            url_dossier = EXCLUDED.url_dossier
+        RETURNING id_dossier
+        ";
+        $cnx->exec($sql);
+
+        // Mise à jour des parcelles des dossiers
+        $sql = "
+        INSERT INTO cartads_dossier_parcelle (id_dossier, nom_dossier, cartads_parcelle)
+        SELECT d.id_dossier, d.nom_dossier, trim(unnest(string_to_array(d.liste_parcelles, ','))) cartads_parcelle
+        FROM cartads_dossier d
+        WHERE id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
+        ON CONFLICT (id_dossier, cartads_parcelle) DO NOTHING
+        RETURNING id_dossier, cartads_parcelle
+        ";
+        $cnx->exec($sql);
+
+        // Récupération du code geo_parcelle
+        $sql = "
+        UPDATE cartads_dossier_parcelle
+        SET geo_parcelle = p.geo_parcelle
+        FROM cartads_parcelle p
+        WHERE cartads_dossier_parcelle.cartads_parcelle = p.cartads_parcelle
+        AND cartads_dossier_parcelle IS NULL;
+        ";
+        $cnx->exec($sql);
+
+        // Calcul des géométries des dossiers
+        $sql = "
+        INSERT INTO cartads_dossier_geo (id_dossier, nom_dossier, geom, complete_geom)
+        SELECT id_dossier, nom_dossier, geom, complete_geom
+        FROM (
+            SELECT cdp.id_dossier, cdp.nom_dossier, ST_UNION(cp.geom) as geom,
+                COUNT(cdp.cartads_parcelle) AS defined_parcelle,
+                COUNT(cp.cartads_parcelle) AS found_parcelle,
+                COUNT(cdp.cartads_parcelle) = COUNT(cp.cartads_parcelle) AS complete_geom
+            FROM admin_sol.cartads_dossier_parcelle cdp
+            LEFT JOIN admin_sol.cartads_parcelle cp ON cdp.cartads_parcelle = cp.cartads_parcelle
+            WHERE cdp.id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
+            GROUP BY cdp.id_dossier, cdp.nom_dossier
+        ) AS calculate_cdg
+        WHERE found_parcelle > 0
+        ORDER BY id_dossier
+        ";
+        $cnx->exec($sql);
+
+        // Retourne le nombre de dossiers traités
+        return new ResultUpdateDossiers(count($values), count($nouveauxDossiers), count($dossiersParcelles));
     }
 }
