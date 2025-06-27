@@ -297,7 +297,7 @@ class dbClient {
             SET geo_parcelle = p.geo_parcelle
             FROM cartads_parcelle p
             WHERE cartads_dossier_parcelle.cartads_parcelle = p.cartads_parcelle
-            AND cartads_dossier_parcelle IS NULL;
+            AND admin_sol.cartads_dossier_parcelle.geo_parcelle IS NULL;
             ";
             $cnx->exec($sql);
 
@@ -313,10 +313,13 @@ class dbClient {
                 FROM admin_sol.cartads_dossier_parcelle cdp
                 LEFT JOIN admin_sol.cartads_parcelle cp ON cdp.cartads_parcelle = cp.cartads_parcelle
                 WHERE cdp.id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
+                  AND ST_IsValid(cp.geom)
                 GROUP BY cdp.id_dossier, cdp.nom_dossier
             ) AS calculate_cdg
             WHERE found_parcelle > 0
-            ORDER BY id_dossier
+            ORDER BY id_dossier ASC
+            ON CONFLICT (id_dossier) DO UPDATE
+            SET geom = EXCLUDED.geom, complete_geom = EXCLUDED.complete_geom
             ";
             $cnx->exec($sql);
         }
