@@ -3,6 +3,8 @@ namespace cartADS;
 
 class AdsCsApiClient {
 
+    protected $config;
+
     public function __construct(string $repo, string $projectName) {
 
         $this->config = Util::projectCartADSConfig($repo, $projectName);
