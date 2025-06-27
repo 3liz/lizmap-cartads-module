@@ -53,11 +53,23 @@ class UpdateDossiers extends ModuleCommandAbstract
 
         $output->writeln('Recherche de dossiers modifiés depuis le '.$dateModification);
         $apiClient = new cartAdsApiClient($repo, $projectName);
-        $dossiers = $apiClient->recherche(array(
-            'dateModification' => $dateModification,
-            'limit' => 1000,
-            'offset' => 0,
-        ));
+        $limit = 1000;
+        $offset = 0;
+        $dossiers = array();
+        $output->writeln('Récupération des dossiers');
+        while ($limit) {
+            $data = $apiClient->recherche(array(
+                'dateModification' => $dateModification,
+                'limit' => $limit,
+                'offset' => $offset,
+            ));
+            $dossiers = array_merge($dossiers, $data);
+            if (count($data) < $limit) {
+                $limit = 0;
+                break;
+            }
+            $offset += $limit;
+        }
 
         $result = cartAdsDbClient::updateDossiers($repo, $projectName, $dossiers);
         if ($result->getNbTotal() == 0) {
