@@ -2,7 +2,7 @@
 namespace cartADS;
 
 use \cartADS\AdsCsApiDossier as cartAdsApiDossier;
-use \cartAds\ResultUpdateDossiers;
+use \cartADS\ResultUpdateDossiers;
 
 
 class dbClient {
