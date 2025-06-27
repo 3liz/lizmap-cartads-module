@@ -10,7 +10,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use \cartADS\dbClient as cartAdsDbClient;
 use \cartADS\Util as cartAdsUtil;
 use \cartADS\AdsCsApiClient as cartAdsApiClient;
-use \cartADS\AdsCsApiDossier as cartAdsApiDossier;
 
 
 class UpdateDossiers extends ModuleCommandAbstract
@@ -52,7 +51,7 @@ class UpdateDossiers extends ModuleCommandAbstract
         }
 
         $apiClient = new cartAdsApiClient($repo, $projectName);
-        $dossiers = $apiClient->getDossiers(array(
+        $dossiers = $apiClient->recherche(array(
             'dateModification' => $dateModification,
             'limit' => 1000,
             'offset' => 0,

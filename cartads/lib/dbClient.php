@@ -1,6 +1,8 @@
 <?php
 namespace cartADS;
 
+use \cartADS\AdsCsApiDossier as cartAdsApiDossier;
+
 class dbClient {
 
     public static function charge(string $repo, string $projectName, array $parcelles) {
@@ -153,7 +155,7 @@ class dbClient {
     }
 
 
-    public static function upateDossiers(string $repo, string $projectName, array $dossiers) {
+    public static function updateDossiers(string $repo, string $projectName, array $dossiers) {
         // Get connection from project
         $cnx = Util::getConnection($repo, $projectName);
         if (!$cnx) {
