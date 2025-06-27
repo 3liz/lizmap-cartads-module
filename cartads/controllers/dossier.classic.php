@@ -48,6 +48,7 @@ class dossierCtrl extends jController {
             );
             return $resp;
         }
+        $result = cartAdsDbClient::updateDossiers($repo, $projectName, array($dossier));
         // dossier found
         $resp->data = $dossier;
         return $resp;
@@ -113,6 +114,7 @@ class dossierCtrl extends jController {
             );
             return $resp;
         }
+        $result = cartAdsDbClient::updateDossiers($repo, $projectName, $dossiers);
         $resp->data = $dossiers;
         return $resp;
     }
