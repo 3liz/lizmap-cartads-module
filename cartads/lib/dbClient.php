@@ -177,7 +177,7 @@ class dbClient {
             liste_parcelles, type_dossier, annee, date_depot,
             date_limite_instruction, date_modification_dossier,
             date_avis_instructeur, date_decision, date_notification_decision,
-            stade, authorite, instructeur, avis_instructeur, signataire,
+            stade, autorite, instructeur, avis_instructeur, signataire,
             decision, demandeur_principal, url_dossier) VALUES
             ".join(",\n", $values);
             $cnx->exec($sql);
@@ -228,15 +228,16 @@ class dbClient {
             liste_parcelles, type_dossier, annee, date_depot,
             date_limite_instruction, date_modification_dossier,
             date_avis_instructeur, date_decision, date_notification_decision,
-            stade, authorite, instructeur, avis_instructeur, signataire,
+            stade, autorite, instructeur, avis_instructeur, signataire,
             decision, demandeur_principal, url_dossier)
             SELECT id_dossier, nom_dossier, commune, n_commune, adresse,
             liste_parcelles, type_dossier, annee, date_depot,
             date_limite_instruction, date_modification_dossier,
             date_avis_instructeur, date_decision, date_notification_decision,
-            stade, authorite, instructeur, avis_instructeur, signataire,
+            stade, autorite, instructeur, avis_instructeur, signataire,
             decision, demandeur_principal, url_dossier
             FROM new_cartads_dossier
+            ORDER BY id_dossier ASC
             ON CONFLICT (id_dossier) DO UPDATE
             SET commune = EXCLUDED.commune,
                 n_commune = EXCLUDED.n_commune,
@@ -251,7 +252,7 @@ class dbClient {
                 date_decision = EXCLUDED.date_decision,
                 date_notification_decision = EXCLUDED.date_notification_decision,
                 stade = EXCLUDED.stade,
-                authorite = EXCLUDED.authorite,
+                autorite = EXCLUDED.autorite,
                 instructeur = EXCLUDED.instructeur,
                 avis_instructeur = EXCLUDED.avis_instructeur,
                 signataire = EXCLUDED.signataire,
