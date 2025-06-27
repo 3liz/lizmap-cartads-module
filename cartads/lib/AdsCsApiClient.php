@@ -135,6 +135,8 @@ class AdsCsApiClient {
                 'dateDepotFin',
                 'dateModification',
                 'parcelle',
+                'limit',
+                'offset',
             ))
         );
         if (count($searchPayload) == 0) {
