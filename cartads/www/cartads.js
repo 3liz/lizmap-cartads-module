@@ -39,7 +39,7 @@ const cartAds = function() {
     function goToDossiers(dossiers) {
         const url = cartAdsConfig.dossierUrl;
         const requests = dossiers.map((dossier) => {
-            return fetch(`${url}?${new URLSearchParams({dossier_id: dossier})}`);
+            return fetch(`${url}?${new URLSearchParams({nom: dossier})}`);
         });
         Promise.all(requests).then((responses) => {
             return Promise.all(responses.map((response) => {

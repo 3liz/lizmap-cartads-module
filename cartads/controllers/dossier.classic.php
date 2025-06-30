@@ -11,13 +11,13 @@ class dossierCtrl extends jController {
 
         $repo = $this->param('repository');
         $projectName = $this->param('project');
-        $dossierId = $this->param('dossier_id');
+        $nomDossier = $this->param('nom');
         if (is_null($repo) || is_null($projectName) || is_null($dossierId)) {
             $resp->setHttpStatus('400', 'Bad Request');
             $resp->data = array(
                 'code' => '400',
                 'message' => 'Bad Request',
-                'details' => 'repository, project dossier_id are mandatory',
+                'details' => 'repository, project, nom are mandatory',
             );
 
             return $resp;
@@ -38,13 +38,13 @@ class dossierCtrl extends jController {
             return $resp;
         }
         $apiClient = new cartAdsApiClient($repo, $projectName);
-        $dossier = $apiClient->getDossier($dossierId);
+        $dossier = $apiClient->getDossier($nomDossier);
         if (!$dossier) {
             $resp->setHttpStatus('404', 'Not Found');
             $resp->data = array(
                 'code' => '404',
                 'message' => 'Not Found',
-                'details' => 'Dossier `'.$dossierId.'`non trouvé',
+                'details' => 'Dossier `'.$nomDossier.'`non trouvé',
             );
             return $resp;
         }

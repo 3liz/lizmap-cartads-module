@@ -60,7 +60,7 @@ class AdsCsApiClient {
         return $resp->Token;
     }
 
-    public function getDossier(string $dossierId) {
+    public function getDossier(string $nomDossier) {
         // get token
         $token = $this->getToken();
         if (!$token) {
@@ -70,7 +70,7 @@ class AdsCsApiClient {
         // build dossier URL
         $dossierURL = $this->config['dossier_url'];
         $dossierPayload = array(
-            'idDossier' => $dossierId,
+            'nomDossier' => $nomDossier,
         );
 
         $url = $dossierURL.'?';
