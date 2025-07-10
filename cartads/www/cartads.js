@@ -48,7 +48,7 @@ const cartAds = function() {
         }).then((data) => {
             const parcelles =
                 data.filter((d) => d !== null)
-                    .map((d) => d.liste_parcelles) // get all lists of parcels
+                    .map((d) => d.Parcelles) // get all lists of parcels
                     .join(',') // join all lists into a single string
                     .split(',').map((p) => p.trim()) // split by comma and trim
                     .filter((value, index, array) => array.indexOf(value) === index) // remove duplicates
