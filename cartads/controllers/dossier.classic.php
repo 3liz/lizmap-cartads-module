@@ -12,7 +12,7 @@ class dossierCtrl extends jController {
         $repo = $this->param('repository');
         $projectName = $this->param('project');
         $nomDossier = $this->param('nom');
-        if (is_null($repo) || is_null($projectName) || is_null($dossierId)) {
+        if (is_null($repo) || is_null($projectName) || is_null($nomDossier)) {
             $resp->setHttpStatus('400', 'Bad Request');
             $resp->data = array(
                 'code' => '400',
