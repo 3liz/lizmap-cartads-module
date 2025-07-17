@@ -3,7 +3,7 @@ const cartAds = function() {
 
     function goToParcelles(parcelles) {
         const layer = lizMap.mainLizmap.state.layersAndGroupsCollection.getLayerByName('parcelles');
-        const filter = `"cartads_parcelle" IN (${parcelles.map(p => `'${p}'`).join(',')})`;
+        const filter = `"cartads_parcelle" IN ( ${parcelles.map(p => `'${p}'`).join(',')} )`;
         const options = {
             'TYPENAME': NOM_COUCHE_PARCELLES,
             'EXP_FILTER': filter,
