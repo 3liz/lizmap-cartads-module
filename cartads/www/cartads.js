@@ -3,9 +3,10 @@ const cartAds = function() {
 
     function goToParcelles(parcelles) {
         const layer = lizMap.mainLizmap.state.layersAndGroupsCollection.getLayerByName('parcelles');
+        const filter = `"cartads_parcelle" IN (${parcelles.map(p => `'${p}'`).join(',')})`;
         const options = {
             'TYPENAME': NOM_COUCHE_PARCELLES,
-            'EXP_FILTER': `"cartads_parcelle" IN (${parcelles.map(p => `'${p}'`).join(',')})`,
+            'EXP_FILTER': filter,
         };
         lizMap.mainLizmap.wfs.getFeature(options).then((featureCollection) => {
             const format = new lizMap.ol.format.GeoJSON();
@@ -33,6 +34,21 @@ const cartAds = function() {
                 }
             );
             lizMap.mainLizmap.map.getView().fit(extent, {duration: 1000});
+            const wmsParams = {
+                QUERY_LAYERS: NOM_COUCHE_PARCELLES,
+                LAYERS: NOM_COUCHE_PARCELLES,
+                FEATURE_COUNT: 50, // TODO: get this value from config after it has been loaded?
+                FILTER: `${NOM_COUCHE_PARCELLES}:${filter}`,
+            }
+            lizMap.mainLizmap.wms.getFeatureInfo(wmsParams).then((getFeatureInfo) => {
+                lizMap.displayGetFeatureInfo(
+                    getFeatureInfo,
+                    { // center in pixel
+                        x: lizMap.mainLizmap.state.map.size[0] / 2,
+                        y: lizMap.mainLizmap.state.map.size[1] / 2,
+                    }
+                );
+            });
         });
     }
 
