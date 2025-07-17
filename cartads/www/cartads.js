@@ -40,7 +40,7 @@ const cartAds = function() {
                 FEATURE_COUNT: 50, // TODO: get this value from config after it has been loaded?
                 FILTER: `${NOM_COUCHE_PARCELLES}:${filter}`,
             }
-            (new lizMap.mainLizmap.wms()).getFeatureInfo(wmsParams).then((getFeatureInfo) => {
+            lizMap.mainLizmap.wms.getFeatureInfo(wmsParams).then((getFeatureInfo) => {
                 lizMap.displayGetFeatureInfo(
                     getFeatureInfo,
                     { // center in pixel
