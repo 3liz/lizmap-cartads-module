@@ -1,6 +1,7 @@
 const cartAds = function() {
     const NOM_COUCHE_PARCELLES = 'parcelles';
     const NOM_DOSSIER_CARTADS = 'cartads_dossier_geo';
+    const NOM_COUCHE_PARCELLES_HISTORIQUE = 'cartads_parcelle_historique';
 
     function goToParcelles(parcelles) {
         const layer = lizMap.mainLizmap.state.layersAndGroupsCollection.getLayerByName(NOM_COUCHE_PARCELLES);
@@ -46,6 +47,7 @@ const cartAds = function() {
             const wmsParams = {
                 QUERY_LAYERS: NOM_COUCHE_PARCELLES,
                 LAYERS: NOM_COUCHE_PARCELLES,
+                CRS: lizMap.mainLizmap.state.map.projection,
                 FEATURE_COUNT: 50, // TODO: get this value from config after it has been loaded?
                 FILTER: `${NOM_COUCHE_PARCELLES}:${filter}`,
             }
@@ -77,6 +79,7 @@ const cartAds = function() {
                 .join(',') // join all lists into a single string
                 .split(',').map((p) => p.trim()) // split by comma and trim
                 .filter((value, index, array) => array.indexOf(value) === index) // remove duplicates
+
             const coords = data
                 .filter((d) => d !== null)
                .map((d) => [d.X, d.Y]);
@@ -98,6 +101,44 @@ const cartAds = function() {
                 );
             }
 
+            if (parcelles.length > 0) {
+                // Filter
+                const filter = `"cartads_parcelle" IN ( ${parcelles.map(p => `'${p}'`).join(',')} )`;
+                const options = {
+                    'TYPENAME': NOM_COUCHE_PARCELLES_HISTORIQUE,
+                    'EXP_FILTER': filter,
+                };
+
+                lizMap.mainLizmap.wfs.getFeature(options).then((featureCollection) => {
+                    const format = new lizMap.ol.format.GeoJSON();
+                    const features = format.readFeatures(featureCollection, {
+                        featureProjection: lizMap.mainLizmap.projection,
+                    });
+                    let extent = null;
+                    let featureIds = [];
+                    features.forEach((feature) => {
+                        featureIds.push(feature.getProperties().cartads_parcelle_id);
+                        if (extent == null) {
+                            extent = feature.getGeometry().getExtent();
+                        } else {
+                            lizMap.ol.extent.extend(extent, feature.getGeometry().getExtent());
+                        }
+                    });
+
+                    const layer = lizMap.mainLizmap.state.layersAndGroupsCollection.getLayerByName(NOM_COUCHE_PARCELLES_HISTORIQUE);
+                    layer.checked = true;
+                    layer.selectedFeatures = featureIds;
+                    lizMap.config.layers[NOM_COUCHE_PARCELLES_HISTORIQUE]['selectedFeatures'] = featureIds;
+                    lizMap.events.triggerEvent('layerSelectionChanged',
+                        {
+                            'featureType': NOM_COUCHE_PARCELLES_HISTORIQUE,
+                            'featureIds': lizMap.config.layers[NOM_COUCHE_PARCELLES_HISTORIQUE]['selectedFeatures'],
+                            'updateDrawing': true
+                        }
+                    );
+                });
+            }
+
             const dossiers = data
                 .filter((d) => d !== null)
                 .map((d) => d.NomDossier);
@@ -106,6 +147,7 @@ const cartAds = function() {
             const wmsParams = {
                 QUERY_LAYERS: NOM_DOSSIER_CARTADS,
                 LAYERS: NOM_DOSSIER_CARTADS,
+                CRS: lizMap.mainLizmap.state.map.projection,
                 FEATURE_COUNT: 50, // TODO: get this value from config after it has been loaded?
                 FILTER: `${NOM_DOSSIER_CARTADS}:${filter}`,
             }
