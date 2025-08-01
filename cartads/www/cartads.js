@@ -84,6 +84,10 @@ const cartAds = function() {
                 .filter((d) => d !== null)
                .map((d) => [d.X, d.Y]);
 
+            const dossiers = data
+                .filter((d) => d !== null)
+                .map((d) => d.NomDossier);
+
             if (coords.length > 0) {
                 // Calculate minResolution for 5000 scale denominator
                 const ADJUSTED_DPI = 95.999808;
@@ -100,6 +104,9 @@ const cartAds = function() {
                     {duration: 1000, minResolution: minResolution}
                 );
             }
+
+            const dlayer = lizMap.mainLizmap.state.layersAndGroupsCollection.getLayerByName(NOM_DOSSIER_CARTADS);
+            dlayer.checked = true;
 
             if (parcelles.length > 0) {
                 // Filter
@@ -125,23 +132,39 @@ const cartAds = function() {
                         }
                     });
 
-                    const layer = lizMap.mainLizmap.state.layersAndGroupsCollection.getLayerByName(NOM_COUCHE_PARCELLES_HISTORIQUE);
-                    layer.checked = true;
-                    layer.selectedFeatures = featureIds;
-                    lizMap.config.layers[NOM_COUCHE_PARCELLES_HISTORIQUE]['selectedFeatures'] = featureIds;
-                    lizMap.events.triggerEvent('layerSelectionChanged',
-                        {
-                            'featureType': NOM_COUCHE_PARCELLES_HISTORIQUE,
-                            'featureIds': lizMap.config.layers[NOM_COUCHE_PARCELLES_HISTORIQUE]['selectedFeatures'],
-                            'updateDrawing': true
+                    if (featureIds.length > 0) {
+                        // Zoom
+                        if (extent !== null) {
+                            lizMap.mainLizmap.map.getView().fit(extent, {duration: 1000});
                         }
-                    );
+                    } else {
+                        $(document.getElementById('edition-layer')).val(dlayer.id);
+
+                        const eventsObj = {
+                            'lizmapeditionformdisplayed': function(e) {
+                                if (e.layerId == dlayer.id) {
+                                    const dossier = dossiers[0];
+                                    const field = $(document.getElementById('jforms_view_edition_nom_dossier'));
+                                    field.val(dossier);
+                                    field.change();
+                                    field.find('~ span > input').val(dossier);
+                                    field.change();
+                                    // PC 011 258 15 L0016
+                                }
+                            },
+                            'lizmapeditionformclosed': function(e) {
+                                if (e.layerId == dlayer.id) {
+                                    lizMap.events.un(eventsObj);
+                                }
+                            },
+                        }
+                        lizMap.events.on(eventsObj);
+
+                        $(document.getElementById('edition-draw')).click();
+                    }
                 });
             }
 
-            const dossiers = data
-                .filter((d) => d !== null)
-                .map((d) => d.NomDossier);
             const filter = `"nom_dossier" IN ( ${dossiers.map(d => `'${d}'`).join(',')} )`;
             // Get feature info
             const wmsParams = {
@@ -160,8 +183,6 @@ const cartAds = function() {
                     }
                 );
             });
-            const layer = lizMap.mainLizmap.state.layersAndGroupsCollection.getLayerByName(NOM_DOSSIER_CARTADS);
-            layer.checked = true;
         });
     }
 

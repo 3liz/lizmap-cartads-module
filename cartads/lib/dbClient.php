@@ -279,7 +279,7 @@ class dbClient {
         ";
         $cnx->exec($sql);
 
-        if (count($dossiersParcelles) > 0 && count($nouveauxDossiers) > 0) {
+        if (count($dossiersParcelles) > 0 || count($nouveauxDossiers) > 0) {
             // Mise à jour des parcelles des dossiers
             $sql = "
             INSERT INTO cartads_dossier_parcelle (id_dossier, nom_dossier, cartads_parcelle)
@@ -306,14 +306,14 @@ class dbClient {
             INSERT INTO cartads_dossier_geo (id_dossier, nom_dossier, geom, complete_geom)
             SELECT id_dossier, nom_dossier, geom, complete_geom
             FROM (
-                SELECT cdp.id_dossier, cdp.nom_dossier, ST_UNION(cp.geom) as geom,
+                SELECT cdp.id_dossier, cdp.nom_dossier, ST_UNION(cph.geom) as geom,
                     COUNT(cdp.cartads_parcelle) AS defined_parcelle,
-                    COUNT(cp.cartads_parcelle) AS found_parcelle,
-                    COUNT(cdp.cartads_parcelle) = COUNT(cp.cartads_parcelle) AS complete_geom
+                    COUNT(cph.cartads_parcelle) AS found_parcelle,
+                    COUNT(cdp.cartads_parcelle) = COUNT(cph.cartads_parcelle) AS complete_geom
                 FROM admin_sol.cartads_dossier_parcelle cdp
-                LEFT JOIN admin_sol.cartads_parcelle cp ON cdp.cartads_parcelle = cp.cartads_parcelle
+                LEFT JOIN admin_sol.cartads_parcelle_historique cph ON cdp.cartads_parcelle = cph.cartads_parcelle
                 WHERE cdp.id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
-                  AND ST_IsValid(cp.geom)
+                  AND ST_IsValid(cph.geom)
                 GROUP BY cdp.id_dossier, cdp.nom_dossier
             ) AS calculate_cdg
             WHERE found_parcelle > 0
