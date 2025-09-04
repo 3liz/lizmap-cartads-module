@@ -26,16 +26,6 @@ const cartAds = function() {
                 }
             });
 
-            layer.selectedFeatures = featureIds;
-            lizMap.config.layers[NOM_COUCHE_PARCELLES]['selectedFeatures'] = featureIds;
-            lizMap.events.triggerEvent('layerSelectionChanged',
-                {
-                    'featureType': NOM_COUCHE_PARCELLES,
-                    'featureIds': lizMap.config.layers[NOM_COUCHE_PARCELLES]['selectedFeatures'],
-                    'updateDrawing': true
-                }
-            );
-
             if (extent == null) {
                 return;
             }
