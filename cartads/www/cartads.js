@@ -71,8 +71,8 @@ const cartAds = function() {
                 .filter((value, index, array) => array.indexOf(value) === index) // remove duplicates
 
             const coords = data
-                .filter((d) => d !== null)
-               .map((d) => [d.X, d.Y]);
+                .filter((d) => d !== null && !isNaN(d.X) && !isNaN(d.Y))
+                .map((d) => [d.X, d.Y]);
 
             const dossiers = data
                 .filter((d) => d !== null)
