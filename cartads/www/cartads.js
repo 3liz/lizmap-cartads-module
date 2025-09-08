@@ -34,13 +34,27 @@ const cartAds = function() {
             lizMap.mainLizmap.map.getView().fit(extent, {duration: 1000});
 
             // Get feature info
-            const wmsParams = {
+            let wmsParams = {
                 QUERY_LAYERS: NOM_COUCHE_PARCELLES,
                 LAYERS: NOM_COUCHE_PARCELLES,
                 CRS: lizMap.mainLizmap.state.map.projection,
                 FEATURE_COUNT: 50, // TODO: get this value from config after it has been loaded?
                 FILTER: `${NOM_COUCHE_PARCELLES}:${filter}`,
             }
+
+            // using cadastre
+            if (globalThis.cadastreConfig && globalThis.cadastreConfig.parcelle) {
+                const wmsName = globalThis.cadastreConfig.parcelle.shortName ?? globalThis.cadastreConfig.parcelle.name;
+                wmsFilter = `"geo_parcelle" IN ( ${features.map(p => `'${p.getProperties().geo_parcelle}'`).join(',')} )`;
+                wmsParams = {
+                    QUERY_LAYERS: wmsName,
+                    LAYERS: wmsName,
+                    CRS: lizMap.mainLizmap.state.map.projection,
+                    FEATURE_COUNT: 50, // TODO: get this value from config after it has been loaded?
+                    FILTER: `${wmsName}:${wmsFilter}`,
+                }
+            }
+
             lizMap.mainLizmap.wms.getFeatureInfo(wmsParams).then((getFeatureInfo) => {
                 lizMap.displayGetFeatureInfo(
                     getFeatureInfo,
