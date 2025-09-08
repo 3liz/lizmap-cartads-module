@@ -189,6 +189,13 @@ const cartAds = function() {
                         lizMap.mainLizmap.map.getView().fit(extent, {duration: 1000});
                     }
                 } else {
+                    if (lizMap.mainLizmap.initialConfig.editionLayers.layerNames.indexOf(dlayer.name) == -1)
+                        return;
+
+                    const editConfig = lizMap.mainLizmap.initialConfig.editionLayers.getLayerConfigByLayerName(dlayer.name);
+                    if (!editConfig.capabilities.createFeature)
+                        return;
+
                     // Launch edition
                     $(document.getElementById('edition-layer')).val(dlayer.id);
 
