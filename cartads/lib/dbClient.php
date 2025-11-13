@@ -171,7 +171,7 @@ class dbClient {
         }
 
         // Clear table new_cartads_dossier
-        $sql = 'TRUNCATE TABLE new_cartads_dossier RESTART IDENTITY';
+        $sql = 'TRUNCATE TABLE new_cartads_dossier';
         $cnx->exec($sql);
         // Insert new dossiers
         $values = array();
