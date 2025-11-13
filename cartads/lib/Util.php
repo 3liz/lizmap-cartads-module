@@ -40,6 +40,7 @@ class Util {
         }
 
         $project = \lizmap::getProject($repo . '~' . $projectName);
+        $config['project'] = $project;
         // le projet contient des variables custom
         $customProjectVariables = $project->getCustomProjectVariables();
         if ($customProjectVariables) {

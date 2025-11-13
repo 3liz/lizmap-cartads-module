@@ -12,6 +12,20 @@ class AdsCsApiClient {
     }
 
     public function getToken() {
+        $project = $this->config['project'];
+        $cache_key = 'cartads_token';
+        try {
+            $cached = $project->getCacheHandler()->getProjectRelatedDataCache($cache_key);
+        } catch (\Exception $e) {
+            // if qgisprojects profile does not exist, or if there is an
+            // other error about the cache, let's log it
+            \jLog::logEx($e, 'error');
+        }
+        // return cached data
+        if ($cached !== false) {
+            return $cached->Token;
+        }
+
         // get authentication url and payload from config
         $authURL = $this->config['auth_url'];
         $authPayload = array(
@@ -56,6 +70,9 @@ class AdsCsApiClient {
 
             return null;
         }
+
+        // cache token with ttl = 59 minutes
+        $project->getCacheHandler()->setProjectRelatedDataCache($cache_key, $resp, 59*60);
 
         return $resp->Token;
     }

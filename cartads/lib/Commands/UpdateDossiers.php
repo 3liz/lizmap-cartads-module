@@ -64,8 +64,10 @@ class UpdateDossiers extends ModuleCommandAbstract
                 'offset' => $offset,
             ));
             $dossiers = array_merge($dossiers, $data);
+            $output->writeln(count($dossiers).' dossiers récupérés');
             if (count($data) < $limit) {
                 $limit = 0;
+                $output->writeln('Tous les dossiers ont été récupérées');
                 break;
             }
             $offset += $limit;
