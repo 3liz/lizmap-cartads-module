@@ -10,7 +10,7 @@ class Util {
     public static function projectIsCartADS(string $repo, string $projectName) {
         $project = \lizmap::getProject($repo . '~' . $projectName);
 
-        if (!$project || $projectName !== 'cartads') {
+        if (!$project || substr($projectName, 0, 7) !== 'cartads' || substr($projectName, -7) !== 'cartads') {
             return self::ERR_CODE_PROJECT_NAME;
         }
 
