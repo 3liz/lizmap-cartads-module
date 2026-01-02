@@ -297,7 +297,7 @@ class dbClient {
             SET geo_parcelle = p.geo_parcelle
             FROM cartads_parcelle p
             WHERE cartads_dossier_parcelle.cartads_parcelle = p.cartads_parcelle
-            AND admin_sol.cartads_dossier_parcelle.geo_parcelle IS NULL;
+            AND cartads_dossier_parcelle.geo_parcelle IS NULL;
             ";
             $cnx->exec($sql);
 
@@ -310,8 +310,8 @@ class dbClient {
                     COUNT(cdp.cartads_parcelle) AS defined_parcelle,
                     COUNT(cph.cartads_parcelle) AS found_parcelle,
                     COUNT(cdp.cartads_parcelle) = COUNT(cph.cartads_parcelle) AS complete_geom
-                FROM admin_sol.cartads_dossier_parcelle cdp
-                LEFT JOIN admin_sol.cartads_parcelle_historique cph ON cdp.cartads_parcelle = cph.cartads_parcelle
+                FROM cartads_dossier_parcelle cdp
+                LEFT JOIN cartads_parcelle_historique cph ON cdp.cartads_parcelle = cph.cartads_parcelle
                 WHERE cdp.id_dossier IN (".implode(',', array_merge($dossiersParcelles, $nouveauxDossiers)).")
                   AND ST_IsValid(cph.geom)
                 GROUP BY cdp.id_dossier, cdp.nom_dossier
