@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+* la date de modification du dossier n'est pas liée au changement de parcelles
+
 ## 1.0.1 - 2026-01-05
 
 ### Fixed

@@ -202,7 +202,6 @@ class dbClient {
         FROM cartads_dossier d
         JOIN new_cartads_dossier n ON n.id_dossier = d.id_dossier
         WHERE d.liste_parcelles != n.liste_parcelles
-        AND d.date_modification_dossier < n.date_modification_dossier
         ";
         $stmt = $cnx->query($sql);
         $results = $stmt->fetchAll();
