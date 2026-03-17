@@ -253,7 +253,7 @@ class dbClient {
         decision, demandeur_principal, url_dossier
         FROM new_cartads_dossier
         ORDER BY id_dossier ASC
-        ON CONFLICT (id_dossier) DO UPDATE
+        ON CONFLICT (nom_dossier) DO UPDATE
         SET commune = EXCLUDED.commune,
             n_commune = EXCLUDED.n_commune,
             adresse = EXCLUDED.adresse,

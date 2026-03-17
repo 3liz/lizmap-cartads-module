@@ -5,6 +5,7 @@
 ### Fixed
 
 * la date de modification du dossier n'est pas liée au changement de parcelles
+* utilisation de `nom_dossier` à la place de `id_dossier` pour la gestion des conflits
 
 ## 1.0.1 - 2026-01-05
 
