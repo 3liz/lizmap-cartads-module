@@ -196,20 +196,6 @@ class dbClient {
         ".join(",\n", $values);
         $cnx->exec($sql);
 
-        // liste des dossiers dont la liste des parcelles a changé
-        $sql = "
-        SELECT d.id_dossier
-        FROM cartads_dossier d
-        JOIN new_cartads_dossier n ON n.id_dossier = d.id_dossier
-        WHERE d.liste_parcelles != n.liste_parcelles
-        ";
-        $stmt = $cnx->query($sql);
-        $results = $stmt->fetchAll();
-        $dossiersParcelles = array();
-        foreach ($results as $result) {
-            $dossiersParcelles[] = $result->id_dossier;
-        }
-
         // liste des nouveaux dossiers
         $sql = "
         SELECT n.id_dossier
@@ -224,6 +210,34 @@ class dbClient {
             $nouveauxDossiers[] = $result->id_dossier;
         }
 
+        // liste des dossiers à modifier
+        $sql = "
+        SELECT n.id_dossier
+        FROM new_cartads_dossier n
+        JOIN cartads_dossier d ON n.id_dossier = d.id_dossier
+        WHERE d.id_dossier IS NOT NULL
+        ";
+        $stmt = $cnx->query($sql);
+        $results = $stmt->fetchAll();
+        $dossiersModifies = array();
+        foreach ($results as $result) {
+            $dossiersModifies[] = $result->id_dossier;
+        }
+
+        // liste des dossiers dont la liste des parcelles a changé
+        $sql = "
+        SELECT d.id_dossier
+        FROM cartads_dossier d
+        JOIN new_cartads_dossier n ON n.id_dossier = d.id_dossier
+        WHERE d.liste_parcelles != n.liste_parcelles
+        ";
+        $stmt = $cnx->query($sql);
+        $results = $stmt->fetchAll();
+        $dossiersParcelles = array();
+        foreach ($results as $result) {
+            $dossiersParcelles[] = $result->id_dossier;
+        }
+
         // suppression des parcelles et des géométries des dossiers dont la liste des parcelles a changé
         if (count($dossiersParcelles) > 0) {
             $sql = "
@@ -236,47 +250,62 @@ class dbClient {
             $cnx->exec($sql);
         }
 
-        // ajout et mise à jour des dossiers
-        $sql = "
-        INSERT INTO cartads_dossier (
-        id_dossier, nom_dossier, commune, n_commune, adresse,
-        liste_parcelles, type_dossier, annee, date_depot,
-        date_limite_instruction, date_modification_dossier,
-        date_avis_instructeur, date_decision, date_notification_decision,
-        stade, autorite, instructeur, avis_instructeur, signataire,
-        decision, demandeur_principal, url_dossier)
-        SELECT id_dossier, nom_dossier, commune, n_commune, adresse,
-        liste_parcelles, type_dossier, annee, date_depot,
-        date_limite_instruction, date_modification_dossier,
-        date_avis_instructeur, date_decision, date_notification_decision,
-        stade, autorite, instructeur, avis_instructeur, signataire,
-        decision, demandeur_principal, url_dossier
-        FROM new_cartads_dossier
-        ORDER BY id_dossier ASC
-        ON CONFLICT (nom_dossier) DO UPDATE
-        SET commune = EXCLUDED.commune,
-            n_commune = EXCLUDED.n_commune,
-            adresse = EXCLUDED.adresse,
-            liste_parcelles = EXCLUDED.liste_parcelles,
-            type_dossier = EXCLUDED.type_dossier,
-            annee = EXCLUDED.annee,
-            date_depot = EXCLUDED.date_depot,
-            date_limite_instruction = EXCLUDED.date_limite_instruction,
-            date_modification_dossier = EXCLUDED.date_modification_dossier,
-            date_avis_instructeur = EXCLUDED.date_avis_instructeur,
-            date_decision = EXCLUDED.date_decision,
-            date_notification_decision = EXCLUDED.date_notification_decision,
-            stade = EXCLUDED.stade,
-            autorite = EXCLUDED.autorite,
-            instructeur = EXCLUDED.instructeur,
-            avis_instructeur = EXCLUDED.avis_instructeur,
-            signataire = EXCLUDED.signataire,
-            decision = EXCLUDED.decision,
-            demandeur_principal = EXCLUDED.demandeur_principal,
-            url_dossier = EXCLUDED.url_dossier
-        RETURNING id_dossier
-        ";
-        $cnx->exec($sql);
+        if (count($nouveauxDossiers) > 0) {
+            // Ajout des nouveaux dossiers
+            $sql = "
+            INSERT INTO cartads_dossier (
+            id_dossier, nom_dossier, commune, n_commune, adresse,
+            liste_parcelles, type_dossier, annee, date_depot,
+            date_limite_instruction, date_modification_dossier,
+            date_avis_instructeur, date_decision, date_notification_decision,
+            stade, autorite, instructeur, avis_instructeur, signataire,
+            decision, demandeur_principal, url_dossier)
+            SELECT id_dossier, nom_dossier, commune, n_commune, adresse,
+            liste_parcelles, type_dossier, annee, date_depot,
+            date_limite_instruction, date_modification_dossier,
+            date_avis_instructeur, date_decision, date_notification_decision,
+            stade, autorite, instructeur, avis_instructeur, signataire,
+            decision, demandeur_principal, url_dossier
+            FROM new_cartads_dossier
+            WHERE id_dossier IN (".implode(',', $nouveauxDossiers).")
+            ORDER BY id_dossier ASC
+            ON CONFLICT (nom_dossier) DO NOTHING
+            RETURNING id_dossier;
+            ";
+            $cnx->exec($sql);
+        }
+
+        if (count($dossiersModifies) > 0) {
+            // Mise à jour des dossiers modifiés
+            $sql = "
+            UPDATE cartads_dossier AS cd
+            SET commune = ncd.commune,
+                n_commune = ncd.n_commune,
+                adresse = ncd.adresse,
+                liste_parcelles = ncd.liste_parcelles,
+                type_dossier = ncd.type_dossier,
+                annee = ncd.annee,
+                date_depot = ncd.date_depot,
+                date_limite_instruction = ncd.date_limite_instruction,
+                date_modification_dossier = ncd.date_modification_dossier,
+                date_avis_instructeur = ncd.date_avis_instructeur,
+                date_decision = ncd.date_decision,
+                date_notification_decision = ncd.date_notification_decision,
+                stade = ncd.stade,
+                autorite = ncd.autorite,
+                instructeur = ncd.instructeur,
+                avis_instructeur = ncd.avis_instructeur,
+                signataire = ncd.signataire,
+                decision = ncd.decision,
+                demandeur_principal = ncd.demandeur_principal,
+                url_dossier = ncd.url_dossier
+            FROM new_cartads_dossier AS ncd
+            WHERE cd.id_dossier = ncd.id_dossier
+            AND ncd.id_dossier IN (".implode(',', $dossiersModifies).")
+            RETURNING cd.id_dossier;
+            ";
+            $cnx->exec($sql);
+        }
 
         if (count($dossiersParcelles) > 0 || count($nouveauxDossiers) > 0) {
             // Mise à jour des parcelles des dossiers

@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+### Fixed
+
 * la vérification du projet et de son nom était mal implémenté
+* la mise à jour de dossiers
 
 ## 1.0.2 - 2026-04-24
+
+### Fixed
 
 * la date de modification du dossier n'est pas liée au changement de parcelles
 * utilisation de `nom_dossier` à la place de `id_dossier` pour la gestion des conflits
