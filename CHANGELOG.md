@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.3 - 2026-06-23
+
 ### Fixed
 
 * la vérification du projet et de son nom était mal implémenté
