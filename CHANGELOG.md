@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* la vérification du projet et de son nom était mal implémenté
+
 ## 1.0.2 - 2026-04-24
 
 * la date de modification du dossier n'est pas liée au changement de parcelles
